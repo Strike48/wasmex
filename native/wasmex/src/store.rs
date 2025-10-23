@@ -47,6 +47,9 @@ pub struct ExWasiP2Options {
     inherit_stdout: bool,
     inherit_stderr: bool,
     allow_http: bool,
+    allow_sockets: bool,
+    allow_tcp: bool,
+    allow_udp: bool,
 }
 
 #[derive(NifStruct)]
@@ -254,10 +257,13 @@ pub fn component_store_new_wasi(
         wasi_ctx_builder.inherit_stderr();
     }
 
-    if options.allow_http {
+    // Enable network access for HTTP or sockets
+    if options.allow_http || options.allow_sockets {
         wasi_ctx_builder
             .inherit_network()
-            .allow_ip_name_lookup(true);
+            .allow_ip_name_lookup(true)
+            .allow_tcp(options.allow_tcp)
+            .allow_udp(options.allow_udp);
     }
 
     let engine = unwrap_engine(engine_resource)?;
