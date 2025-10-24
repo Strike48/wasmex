@@ -50,6 +50,64 @@ pub struct ComponentInstanceResource {
 #[rustler::resource_impl()]
 impl rustler::Resource for ComponentInstanceResource {}
 
+fn add_config_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<()> {
+    // Manually implement config-get and config-get-all functions
+    // These match the WIT definitions in our test component
+
+    // Implement config-get(key: string) -> option<string>
+    linker.root()
+        .func_new(
+            "config-get",
+            move |store: wasmtime::StoreContextMut<ComponentStoreData>, params, results| {
+                if let Val::String(key) = &params[0] {
+                    let config = store.data().config.as_ref();
+                    if let Some(config_map) = config {
+                        let value = config_map.get(key.as_str()).cloned();
+                        // Return option<string>
+                        if let Some(v) = value {
+                            results[0] = Val::Option(Some(Box::new(Val::String(v.into()))));
+                        } else {
+                            results[0] = Val::Option(None);
+                        }
+                    } else {
+                        results[0] = Val::Option(None);
+                    }
+                    Ok(())
+                } else {
+                    Err(anyhow::anyhow!("Invalid parameter type for config-get"))
+                }
+            },
+        )
+        .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
+
+    // Implement config-get-all() -> list<tuple<string, string>>
+    linker.root()
+        .func_new(
+            "config-get-all",
+            move |store: wasmtime::StoreContextMut<ComponentStoreData>, _params, results| {
+                let config = store.data().config.as_ref();
+                if let Some(config_map) = config {
+                    let pairs: Vec<Val> = config_map
+                        .iter()
+                        .map(|(k, v)| {
+                            Val::Tuple(vec![
+                                Val::String(k.clone().into()),
+                                Val::String(v.clone().into()),
+                            ])
+                        })
+                        .collect();
+                    results[0] = Val::List(pairs);
+                } else {
+                    results[0] = Val::List(vec![]);
+                }
+                Ok(())
+            },
+        )
+        .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
+
+    Ok(())
+}
+
 #[rustler::nif(name = "component_instance_new")]
 pub fn new_instance(
     store_resource: ResourceArc<ComponentStoreResource>,
@@ -75,6 +133,9 @@ pub fn new_instance(
     if store.data().http.is_some() {
         let _ = wasmtime_wasi_http::add_only_http_to_linker_sync(&mut linker);
     }
+
+    // Always add config functions (they'll return empty when no config is set)
+    add_config_to_linker(&mut linker)?;
 
     // Instantiate the component
 

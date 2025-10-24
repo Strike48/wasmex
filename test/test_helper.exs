@@ -3,6 +3,7 @@ defmodule TestHelper do
   @component_type_conversions_source_dir "#{@fixture_project_dir}/component_type_conversions"
   @component_exported_interface_source_dir "#{@fixture_project_dir}/component_exported_interface"
   @wasi_sockets_test_source_dir "#{@fixture_project_dir}/wasi_sockets_test"
+  @wasi_config_test_source_dir "#{@fixture_project_dir}/wasi_config_test"
   @wasm_test_source_dir "#{@fixture_project_dir}/wasm_test"
   @wasm_link_test_source_dir "#{@fixture_project_dir}/wasm_link_test"
   @wasm_link_dep_test_source_dir "#{@fixture_project_dir}/wasm_link_dep_test"
@@ -21,6 +22,10 @@ defmodule TestHelper do
   def wasi_sockets_test_file_path,
     do:
       "#{@wasi_sockets_test_source_dir}/target/wasm32-wasip1/release/wasi_sockets_test.wasm"
+
+  def wasi_config_test_file_path,
+    do:
+      "#{@wasi_config_test_source_dir}/target/wasm32-wasip1/release/wasi_config_test.wasm"
 
   def wasm_test_file_path,
     do: "#{@wasm_test_source_dir}/target/wasm32-unknown-unknown/debug/wasmex_test.wasm"
@@ -70,6 +75,14 @@ defmodule TestHelper do
     {_, 0} =
       System.cmd("cargo", ["component", "build", "--release"],
         cd: @wasi_sockets_test_source_dir,
+        stderr_to_stdout: true,
+        parallelism: true
+      )
+
+    # Build wasi_config_test component in release mode
+    {_, 0} =
+      System.cmd("cargo", ["component", "build", "--release"],
+        cd: @wasi_config_test_source_dir,
         stderr_to_stdout: true,
         parallelism: true
       )

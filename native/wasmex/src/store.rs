@@ -43,6 +43,7 @@ pub struct ExWasiOptions {
 pub struct ExWasiP2Options {
     args: Vec<String>,
     env: HashMap<String, String>,
+    config_vars: HashMap<String, String>,
     inherit_stdin: bool,
     inherit_stdout: bool,
     inherit_stderr: bool,
@@ -108,6 +109,7 @@ pub struct StoreData {
 pub struct ComponentStoreData {
     pub(crate) ctx: Option<WasiCtx>,
     pub(crate) http: Option<WasiHttpCtx>,
+    pub(crate) config: Option<HashMap<String, String>>,
     pub(crate) limits: StoreLimits,
     pub(crate) table: ResourceTable,
 }
@@ -220,6 +222,7 @@ pub fn component_store_new(
         ComponentStoreData {
             http: None,
             ctx: None,
+            config: None,
             limits,
             table: wasmtime_wasi::ResourceTable::new(),
         },
@@ -279,12 +282,20 @@ pub fn component_store_new_wasi(
         None
     };
 
+    // Store runtime config vars for manual implementation
+    let config_option = if !options.config_vars.is_empty() {
+        Some(options.config_vars.clone())
+    } else {
+        None
+    };
+
     let mut store = Store::new(
         &engine,
         ComponentStoreData {
             ctx: Some(wasi_ctx_builder.build()),
             limits,
             http: http_option,
+            config: config_option,
             table: wasmtime_wasi::ResourceTable::new(),
         },
     );

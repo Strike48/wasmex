@@ -35,6 +35,10 @@ defmodule Wasmex.Wasi.WasiP2Options do
     * `:env` - Map of environment variables to make available to the component.
       Defaults to `%{}`.
 
+    * `:config_vars` - Map of runtime configuration variables accessible via `wasi:config/runtime`.
+      These are separate from environment variables and designed for application configuration.
+      Defaults to `%{}`.
+
   ## Example
 
       iex> wasi_opts = %Wasmex.Wasi.WasiP2Options{
@@ -59,6 +63,20 @@ defmodule Wasmex.Wasi.WasiP2Options do
       ...>   wasi: wasi_opts
       ...> })
 
+  ## Runtime Configuration Example
+
+      iex> wasi_opts = %Wasmex.Wasi.WasiP2Options{
+      ...>   config_vars: %{
+      ...>     "database_url" => "postgres://localhost/mydb",
+      ...>     "api_key" => "secret123",
+      ...>     "feature_flags" => "new_ui,beta_features"
+      ...>   }
+      ...> }
+      iex> {:ok, pid} = Wasmex.Components.start_link(%{
+      ...>   path: "my_app.wasm",
+      ...>   wasi: wasi_opts
+      ...> })
+
   """
 
   defstruct inherit_stdin: true,
@@ -69,11 +87,13 @@ defmodule Wasmex.Wasi.WasiP2Options do
             allow_tcp: true,
             allow_udp: true,
             args: [],
-            env: %{}
+            env: %{},
+            config_vars: %{}
 
   @type t :: %__MODULE__{
           args: [String.t()],
           env: %{String.t() => String.t()},
+          config_vars: %{String.t() => String.t()},
           inherit_stdin: boolean(),
           inherit_stdout: boolean(),
           inherit_stderr: boolean(),
