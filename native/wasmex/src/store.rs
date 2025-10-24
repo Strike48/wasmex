@@ -51,6 +51,7 @@ pub struct ExWasiP2Options {
     allow_sockets: bool,
     allow_tcp: bool,
     allow_udp: bool,
+    allow_keyvalue: bool,
 }
 
 #[derive(NifStruct)]
@@ -110,6 +111,7 @@ pub struct ComponentStoreData {
     pub(crate) ctx: Option<WasiCtx>,
     pub(crate) http: Option<WasiHttpCtx>,
     pub(crate) config: Option<HashMap<String, String>>,
+    pub(crate) keyvalue: Option<HashMap<String, Vec<u8>>>,
     pub(crate) limits: StoreLimits,
     pub(crate) table: ResourceTable,
 }
@@ -223,6 +225,7 @@ pub fn component_store_new(
             http: None,
             ctx: None,
             config: None,
+            keyvalue: None,
             limits,
             table: wasmtime_wasi::ResourceTable::new(),
         },
@@ -289,6 +292,13 @@ pub fn component_store_new_wasi(
         None
     };
 
+    // Initialize keyvalue store if allowed
+    let keyvalue_option = if options.allow_keyvalue {
+        Some(HashMap::new())
+    } else {
+        None
+    };
+
     let mut store = Store::new(
         &engine,
         ComponentStoreData {
@@ -296,6 +306,7 @@ pub fn component_store_new_wasi(
             limits,
             http: http_option,
             config: config_option,
+            keyvalue: keyvalue_option,
             table: wasmtime_wasi::ResourceTable::new(),
         },
     );

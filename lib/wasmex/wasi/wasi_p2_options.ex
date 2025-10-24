@@ -29,6 +29,9 @@ defmodule Wasmex.Wasi.WasiP2Options do
     * `:allow_udp` - When `true`, allows UDP socket operations. Only takes effect when
       `:allow_sockets` or `:allow_http` is `true`. Defaults to `true`.
 
+    * `:allow_keyvalue` - When `true`, enables an in-memory key-value store for the component.
+      The store is isolated per component instance. Defaults to `false`.
+
     * `:args` - List of command-line arguments to pass to the component.
       Defaults to `[]`.
 
@@ -86,6 +89,7 @@ defmodule Wasmex.Wasi.WasiP2Options do
             allow_sockets: false,
             allow_tcp: true,
             allow_udp: true,
+            allow_keyvalue: false,
             args: [],
             env: %{},
             config_vars: %{}
@@ -100,6 +104,7 @@ defmodule Wasmex.Wasi.WasiP2Options do
           allow_http: boolean(),
           allow_sockets: boolean(),
           allow_tcp: boolean(),
-          allow_udp: boolean()
+          allow_udp: boolean(),
+          allow_keyvalue: boolean()
         }
 end

@@ -1,0 +1,14 @@
+package component:wasi-keyvalue-test;
+
+world root {
+    // Import simplified keyvalue functions
+    import kv-get: func(key: string) -> option<list<u8>>;
+    import kv-set: func(key: string, value: list<u8>);
+    import kv-delete: func(key: string);
+    import kv-exists: func(key: string) -> bool;
+
+    // Export test functions
+    export test-set-get: func(key: string, value: string) -> result<string, string>;
+    export test-delete: func(key: string) -> result<string, string>;
+    export test-exists: func(key: string) -> result<bool, string>;
+}
