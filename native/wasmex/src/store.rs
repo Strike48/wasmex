@@ -331,8 +331,13 @@ pub fn new_wasi(
 
     let mut builder = WasiCtxBuilder::new();
 
+    // Prepend a program name (argv[0]) to args, similar to how wasmtime CLI works
+    // This is required by many WASM programs that expect argc >= 1
+    let mut full_args = vec!["wasmex".to_string()];
+    full_args.extend(options.args.iter().cloned());
+
     builder
-        .args(&options.args)
+        .args(&full_args)
         .map_err(|err| Error::Term(Box::new(err.to_string())))?
         .envs(wasi_env)
         .map_err(|err| Error::Term(Box::new(err.to_string())))?;
