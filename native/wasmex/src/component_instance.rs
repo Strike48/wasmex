@@ -50,6 +50,164 @@ pub struct ComponentInstanceResource {
 #[rustler::resource_impl()]
 impl rustler::Resource for ComponentInstanceResource {}
 
+fn add_config_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<()> {
+    // Manually implement config-get and config-get-all functions
+    // These match the WIT definitions in our test component
+
+    // Implement config-get(key: string) -> option<string>
+    linker
+        .root()
+        .func_new(
+            "config-get",
+            move |store: wasmtime::StoreContextMut<ComponentStoreData>, params, results| {
+                if let Val::String(key) = &params[0] {
+                    let config = store.data().config.as_ref();
+                    if let Some(config_map) = config {
+                        let value = config_map.get(key.as_str()).cloned();
+                        // Return option<string>
+                        if let Some(v) = value {
+                            results[0] = Val::Option(Some(Box::new(Val::String(v))));
+                        } else {
+                            results[0] = Val::Option(None);
+                        }
+                    } else {
+                        results[0] = Val::Option(None);
+                    }
+                    Ok(())
+                } else {
+                    Err(anyhow::anyhow!("Invalid parameter type for config-get"))
+                }
+            },
+        )
+        .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
+
+    // Implement config-get-all() -> list<tuple<string, string>>
+    linker
+        .root()
+        .func_new(
+            "config-get-all",
+            move |store: wasmtime::StoreContextMut<ComponentStoreData>, _params, results| {
+                let config = store.data().config.as_ref();
+                if let Some(config_map) = config {
+                    let pairs: Vec<Val> = config_map
+                        .iter()
+                        .map(|(k, v)| {
+                            Val::Tuple(vec![Val::String(k.clone()), Val::String(v.clone())])
+                        })
+                        .collect();
+                    results[0] = Val::List(pairs);
+                } else {
+                    results[0] = Val::List(vec![]);
+                }
+                Ok(())
+            },
+        )
+        .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
+
+    Ok(())
+}
+
+fn add_keyvalue_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<()> {
+    // Simplified keyvalue API with basic operations
+    // kv-get(key: string) -> option<list<u8>>
+    // kv-set(key: string, value: list<u8>) -> unit
+    // kv-delete(key: string) -> unit
+    // kv-exists(key: string) -> bool
+
+    // Implement kv-get(key: string) -> option<list<u8>>
+    linker
+        .root()
+        .func_new(
+            "kv-get",
+            move |mut store: wasmtime::StoreContextMut<ComponentStoreData>, params, results| {
+                if let Val::String(key) = &params[0] {
+                    let keyvalue = store.data_mut().keyvalue.as_ref();
+                    if let Some(kv_map) = keyvalue {
+                        let value = kv_map.get(key.as_str()).cloned();
+                        if let Some(v) = value {
+                            results[0] = Val::Option(Some(Box::new(Val::List(
+                                v.into_iter().map(Val::U8).collect(),
+                            ))));
+                        } else {
+                            results[0] = Val::Option(None);
+                        }
+                    } else {
+                        results[0] = Val::Option(None);
+                    }
+                    Ok(())
+                } else {
+                    Err(anyhow::anyhow!("Invalid parameter type for kv-get"))
+                }
+            },
+        )
+        .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
+
+    // Implement kv-set(key: string, value: list<u8>) -> unit
+    linker
+        .root()
+        .func_new(
+            "kv-set",
+            move |mut store: wasmtime::StoreContextMut<ComponentStoreData>, params, _results| {
+                if let (Val::String(key), Val::List(value_list)) = (&params[0], &params[1]) {
+                    let bytes: Vec<u8> = value_list
+                        .iter()
+                        .filter_map(|v| if let Val::U8(b) = v { Some(*b) } else { None })
+                        .collect();
+
+                    if let Some(kv_map) = store.data_mut().keyvalue.as_mut() {
+                        kv_map.insert(key.to_string(), bytes);
+                    }
+                    Ok(())
+                } else {
+                    Err(anyhow::anyhow!("Invalid parameter types for kv-set"))
+                }
+            },
+        )
+        .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
+
+    // Implement kv-delete(key: string) -> unit
+    linker
+        .root()
+        .func_new(
+            "kv-delete",
+            move |mut store: wasmtime::StoreContextMut<ComponentStoreData>, params, _results| {
+                if let Val::String(key) = &params[0] {
+                    if let Some(kv_map) = store.data_mut().keyvalue.as_mut() {
+                        kv_map.remove(key.as_str());
+                    }
+                    Ok(())
+                } else {
+                    Err(anyhow::anyhow!("Invalid parameter type for kv-delete"))
+                }
+            },
+        )
+        .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
+
+    // Implement kv-exists(key: string) -> bool
+    linker
+        .root()
+        .func_new(
+            "kv-exists",
+            move |store: wasmtime::StoreContextMut<ComponentStoreData>, params, results| {
+                if let Val::String(key) = &params[0] {
+                    let exists = store
+                        .data()
+                        .keyvalue
+                        .as_ref()
+                        .map(|kv_map| kv_map.contains_key(key.as_str()))
+                        .unwrap_or(false);
+                    results[0] = Val::Bool(exists);
+                    Ok(())
+                } else {
+                    Err(anyhow::anyhow!("Invalid parameter type for kv-exists"))
+                }
+            },
+        )
+        .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
+
+    Ok(())
+}
+
 #[rustler::nif(name = "component_instance_new")]
 pub fn new_instance(
     store_resource: ResourceArc<ComponentStoreResource>,
@@ -74,6 +232,14 @@ pub fn new_instance(
     let _ = wasmtime_wasi::p2::add_to_linker_sync(&mut linker);
     if store.data().http.is_some() {
         let _ = wasmtime_wasi_http::add_only_http_to_linker_sync(&mut linker);
+    }
+
+    // Always add config functions (they'll return empty when no config is set)
+    add_config_to_linker(&mut linker)?;
+
+    // Add keyvalue functions if enabled
+    if store.data().keyvalue.is_some() {
+        add_keyvalue_to_linker(&mut linker)?;
     }
 
     // Instantiate the component

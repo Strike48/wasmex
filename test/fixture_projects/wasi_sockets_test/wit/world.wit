@@ -1,0 +1,11 @@
+package component:wasi-sockets-test;
+
+world root {
+    // Function that tests DNS lookup
+    // Returns a success message or error description
+    export test-dns-lookup: func(host: string) -> result<string, string>;
+
+    // Function that tests TCP connectivity
+    // Returns a success message or error description
+    export test-tcp-connect: func(host: string, port: u16) -> result<string, string>;
+}

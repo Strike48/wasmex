@@ -1,0 +1,20 @@
+package wasi:config@0.2.0-draft;
+
+interface runtime {
+    /// Errors that can occur when getting config
+    variant config-error {
+        upstream(string),
+        io(string),
+    }
+
+    /// Get a single config value by key.
+    /// Returns Some(value) if the key exists, None if it doesn't.
+    get: func(key: string) -> result<option<string>, config-error>;
+
+    /// Get all config values as key-value pairs.
+    get-all: func() -> result<list<tuple<string, string>>, config-error>;
+}
+
+world imports {
+    import runtime;
+}

@@ -5,9 +5,24 @@ defmodule Wasmex.Native do
   version = mix_config[:version]
   github_url = mix_config[:package][:links]["GitHub"]
 
+  # Allow source_url to be configured for fork support
+  # Example config: config :wasmex, source_url: "https://github.com/fork-owner/wasmex"
+  source_url = Application.compile_env(:wasmex, :source_url, github_url)
+
+  # Allow version override for non-tagged builds (using commit SHA)
+  # Example config: config :wasmex, version_override: "a1b2c3d"
+  version_tag = Application.compile_env(:wasmex, :version_override, "v#{version}")
+
+  # Construct default base_url from source_url and version_tag
+  default_base_url = "#{source_url}/releases/download/#{version_tag}"
+
+  # Allow base_url to be fully overridden for maximum flexibility
+  # Example config: config :wasmex, base_url: "https://github.com/fork-owner/wasmex/releases/download/abc123"
+  base_url = Application.compile_env(:wasmex, :base_url, default_base_url)
+
   use RustlerPrecompiled,
     otp_app: :wasmex,
-    base_url: "#{github_url}/releases/download/v#{version}",
+    base_url: base_url,
     version: version,
     targets: ~w(
       aarch64-apple-darwin

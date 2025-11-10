@@ -1,0 +1,15 @@
+package component:wasi-config-test;
+
+world root {
+    // Import runtime config functions (manually defined to match wasi:config/runtime@0.2.0-draft)
+    import config-get: func(key: string) -> option<string>;
+    import config-get-all: func() -> list<tuple<string, string>>;
+
+    // Function that tests getting a specific config value
+    // Returns the value if found, or an error message
+    export test-get-config: func(key: string) -> result<string, string>;
+
+    // Function that tests getting all config values
+    // Returns a comma-separated list of "key=value" pairs
+    export test-get-all-config: func() -> result<string, string>;
+}

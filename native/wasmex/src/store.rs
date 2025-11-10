@@ -43,10 +43,15 @@ pub struct ExWasiOptions {
 pub struct ExWasiP2Options {
     args: Vec<String>,
     env: HashMap<String, String>,
+    config_vars: HashMap<String, String>,
     inherit_stdin: bool,
     inherit_stdout: bool,
     inherit_stderr: bool,
     allow_http: bool,
+    allow_sockets: bool,
+    allow_tcp: bool,
+    allow_udp: bool,
+    allow_keyvalue: bool,
 }
 
 #[derive(NifStruct)]
@@ -105,6 +110,8 @@ pub struct StoreData {
 pub struct ComponentStoreData {
     pub(crate) ctx: Option<WasiCtx>,
     pub(crate) http: Option<WasiHttpCtx>,
+    pub(crate) config: Option<HashMap<String, String>>,
+    pub(crate) keyvalue: Option<HashMap<String, Vec<u8>>>,
     pub(crate) limits: StoreLimits,
     pub(crate) table: ResourceTable,
 }
@@ -217,6 +224,8 @@ pub fn component_store_new(
         ComponentStoreData {
             http: None,
             ctx: None,
+            config: None,
+            keyvalue: None,
             limits,
             table: wasmtime_wasi::ResourceTable::new(),
         },
@@ -254,10 +263,13 @@ pub fn component_store_new_wasi(
         wasi_ctx_builder.inherit_stderr();
     }
 
-    if options.allow_http {
+    // Enable network access for HTTP or sockets
+    if options.allow_http || options.allow_sockets {
         wasi_ctx_builder
             .inherit_network()
-            .allow_ip_name_lookup(true);
+            .allow_ip_name_lookup(true)
+            .allow_tcp(options.allow_tcp)
+            .allow_udp(options.allow_udp);
     }
 
     let engine = unwrap_engine(engine_resource)?;
@@ -273,12 +285,28 @@ pub fn component_store_new_wasi(
         None
     };
 
+    // Store runtime config vars for manual implementation
+    let config_option = if !options.config_vars.is_empty() {
+        Some(options.config_vars.clone())
+    } else {
+        None
+    };
+
+    // Initialize keyvalue store if allowed
+    let keyvalue_option = if options.allow_keyvalue {
+        Some(HashMap::new())
+    } else {
+        None
+    };
+
     let mut store = Store::new(
         &engine,
         ComponentStoreData {
             ctx: Some(wasi_ctx_builder.build()),
             limits,
             http: http_option,
+            config: config_option,
+            keyvalue: keyvalue_option,
             table: wasmtime_wasi::ResourceTable::new(),
         },
     );
@@ -303,8 +331,13 @@ pub fn new_wasi(
 
     let mut builder = WasiCtxBuilder::new();
 
+    // Prepend a program name (argv[0]) to args, similar to how wasmtime CLI works
+    // This is required by many WASM programs that expect argc >= 1
+    let mut full_args = vec!["wasmex".to_string()];
+    full_args.extend(options.args.iter().cloned());
+
     builder
-        .args(&options.args)
+        .args(&full_args)
         .map_err(|err| Error::Term(Box::new(err.to_string())))?
         .envs(wasi_env)
         .map_err(|err| Error::Term(Box::new(err.to_string())))?;
