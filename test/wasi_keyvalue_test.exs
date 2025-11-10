@@ -27,9 +27,7 @@ defmodule Wasmex.WasiKeyvalueTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Test setting and getting a simple string
       result = Wasmex.Components.call_function(pid, "test-set-get", ["mykey", "myvalue"])
@@ -44,9 +42,7 @@ defmodule Wasmex.WasiKeyvalueTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Set initial value
       result = Wasmex.Components.call_function(pid, "test-set-get", ["key1", "value1"])
@@ -65,9 +61,7 @@ defmodule Wasmex.WasiKeyvalueTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Check non-existent key
       result = Wasmex.Components.call_function(pid, "test-exists", ["nonexistent"])
@@ -89,9 +83,7 @@ defmodule Wasmex.WasiKeyvalueTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Set a key
       _result = Wasmex.Components.call_function(pid, "test-set-get", ["deletekey", "value"])
@@ -117,9 +109,7 @@ defmodule Wasmex.WasiKeyvalueTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Delete non-existent key
       result = Wasmex.Components.call_function(pid, "test-delete", ["nonexistent"])

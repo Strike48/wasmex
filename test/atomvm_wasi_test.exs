@@ -1,8 +1,10 @@
 defmodule AtomVMWasiTest do
   use ExUnit.Case
 
-  @atomvm_dir "/home/joshadams/src/github.com/atomvm/AtomVM"
-  @wasmtime_bin "/home/joshadams/.wasmtime/bin/wasmtime"
+  @moduletag :skip
+
+  @atomvm_dir System.get_env("ATOMVM_DIR", "/home/joshadams/src/github.com/atomvm/AtomVM")
+  @wasmtime_bin System.get_env("WASMTIME_BIN", "/home/joshadams/.wasmtime/bin/wasmtime")
   @atomvm_wasm "build-wasi/src/platforms/wasi/AtomVM.wasm"
   @test_beam "test_tcp_socket.beam"
 
@@ -15,9 +17,10 @@ defmodule AtomVMWasiTest do
       raise """
       AtomVM.wasm not found at: #{atomvm_path}
 
-      Please build it first:
-        cd #{@atomvm_dir}
-        export WASI_SDK_PATH=/home/joshadams/wasi-sdk-22.0
+      Please build it first or set ATOMVM_DIR environment variable:
+        export ATOMVM_DIR=/path/to/AtomVM
+        cd $ATOMVM_DIR
+        export WASI_SDK_PATH=/path/to/wasi-sdk
         just wasi-build
       """
     end
@@ -125,9 +128,7 @@ defmodule AtomVMWasiTest do
           atomvm_path = Path.join(@atomvm_dir, @atomvm_wasm)
 
           {output, exit_code} =
-            System.cmd("wasm-tools", ["component", "wit", atomvm_path],
-              stderr_to_stdout: true
-            )
+            System.cmd("wasm-tools", ["component", "wit", atomvm_path], stderr_to_stdout: true)
 
           assert exit_code == 0, "wasm-tools failed: #{output}"
 

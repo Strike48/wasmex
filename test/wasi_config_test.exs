@@ -35,9 +35,7 @@ defmodule Wasmex.WasiConfigTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Test getting database_url
       result = Wasmex.Components.call_function(pid, "test-get-config", ["database_url"])
@@ -62,9 +60,7 @@ defmodule Wasmex.WasiConfigTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       result = Wasmex.Components.call_function(pid, "test-get-config", ["nonexistent_key"])
       assert {:ok, {:error, error_msg}} = result
@@ -83,9 +79,7 @@ defmodule Wasmex.WasiConfigTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       result = Wasmex.Components.call_function(pid, "test-get-all-config", [])
       assert {:ok, {:ok, config_string}} = result
@@ -116,9 +110,7 @@ defmodule Wasmex.WasiConfigTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       result = Wasmex.Components.call_function(pid, "test-get-all-config", [])
       assert {:ok, {:ok, ""}} = result

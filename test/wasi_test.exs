@@ -90,6 +90,7 @@ defmodule WasiTest do
              Hello from the WASI test program!
 
              Arguments:
+             wasmex
              hello
              from elixir
 
@@ -110,7 +111,7 @@ defmodule WasiTest do
     {:ok, stdout} = Wasmex.Pipe.new()
 
     wasi_options = %Wasmex.Wasi.WasiOptions{
-      args: ["wasmex", "echo"],
+      args: ["echo"],
       stdin: stdin,
       stdout: stdout
     }
@@ -130,7 +131,7 @@ defmodule WasiTest do
 
   test "file system access without preopened dirs" do
     {:ok, stdout} = Wasmex.Pipe.new()
-    wasi = %WasiOptions{args: ["wasmex", "list_files", "src"], stdout: stdout}
+    wasi = %WasiOptions{args: ["list_files", "src"], stdout: stdout}
 
     instance =
       start_supervised!(
@@ -146,7 +147,7 @@ defmodule WasiTest do
     {:ok, stdout} = Wasmex.Pipe.new()
 
     wasi = %WasiOptions{
-      args: ["wasmex", "list_files", "test/fixture_projects/wasi_test/src"],
+      args: ["list_files", "test/fixture_projects/wasi_test/src"],
       stdout: stdout,
       preopen: [%PreopenOptions{path: "test/fixture_projects/wasi_test/src"}]
     }
@@ -165,7 +166,7 @@ defmodule WasiTest do
     {:ok, stdout} = Wasmex.Pipe.new()
 
     wasi = %WasiOptions{
-      args: ["wasmex", "list_files", "aliased_src"],
+      args: ["list_files", "aliased_src"],
       stdout: stdout,
       preopen: [
         %PreopenOptions{path: "test/fixture_projects/wasi_test/src", alias: "aliased_src"}
@@ -186,7 +187,7 @@ defmodule WasiTest do
     {:ok, stdout} = Wasmex.Pipe.new()
 
     wasi = %WasiOptions{
-      args: ["wasmex", "read_file", "src/main.rs"],
+      args: ["read_file", "src/main.rs"],
       stdout: stdout,
       preopen: [%PreopenOptions{path: "test/fixture_projects/wasi_test/src", alias: "src"}]
     }
@@ -209,7 +210,7 @@ defmodule WasiTest do
     {:ok, stdout} = Wasmex.Pipe.new()
 
     wasi = %WasiOptions{
-      args: ["wasmex", "write_file", "src/#{filename}"],
+      args: ["write_file", "src/#{filename}"],
       stdout: stdout,
       preopen: [%PreopenOptions{path: dir, alias: "src"}]
     }
@@ -236,7 +237,7 @@ defmodule WasiTest do
     {:ok, stdout} = Wasmex.Pipe.new()
 
     wasi = %WasiOptions{
-      args: ["wasmex", "create_file", "src/#{filename}"],
+      args: ["create_file", "src/#{filename}"],
       stdout: stdout,
       preopen: [%PreopenOptions{path: dir, alias: "src"}]
     }

@@ -22,9 +22,7 @@ defmodule Wasmex.WasiSocketsTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Test DNS resolution for a well-known domain
       result = Wasmex.Components.call_function(pid, "test-dns-lookup", ["example.com"])
@@ -53,9 +51,7 @@ defmodule Wasmex.WasiSocketsTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Should fail because sockets are not enabled
       result = Wasmex.Components.call_function(pid, "test-dns-lookup", ["example.com"])
@@ -76,9 +72,7 @@ defmodule Wasmex.WasiSocketsTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Try to connect to example.com on port 80 (HTTP)
       result = Wasmex.Components.call_function(pid, "test-tcp-connect", ["example.com", 80])
@@ -107,9 +101,7 @@ defmodule Wasmex.WasiSocketsTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # Should fail because TCP is disabled
       result = Wasmex.Components.call_function(pid, "test-tcp-connect", ["example.com", 80])
@@ -127,9 +119,7 @@ defmodule Wasmex.WasiSocketsTest do
       }
 
       pid =
-        start_supervised!(
-          {Wasmex.Components, bytes: component_bytes, wasi: wasi_opts}
-        )
+        start_supervised!({Wasmex.Components, bytes: component_bytes, wasi: wasi_opts})
 
       # DNS should work when allow_http is enabled
       result = Wasmex.Components.call_function(pid, "test-dns-lookup", ["example.com"])

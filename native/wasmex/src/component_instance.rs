@@ -55,7 +55,8 @@ fn add_config_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<()
     // These match the WIT definitions in our test component
 
     // Implement config-get(key: string) -> option<string>
-    linker.root()
+    linker
+        .root()
         .func_new(
             "config-get",
             move |store: wasmtime::StoreContextMut<ComponentStoreData>, params, results| {
@@ -65,7 +66,7 @@ fn add_config_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<()
                         let value = config_map.get(key.as_str()).cloned();
                         // Return option<string>
                         if let Some(v) = value {
-                            results[0] = Val::Option(Some(Box::new(Val::String(v.into()))));
+                            results[0] = Val::Option(Some(Box::new(Val::String(v))));
                         } else {
                             results[0] = Val::Option(None);
                         }
@@ -81,7 +82,8 @@ fn add_config_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<()
         .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
 
     // Implement config-get-all() -> list<tuple<string, string>>
-    linker.root()
+    linker
+        .root()
         .func_new(
             "config-get-all",
             move |store: wasmtime::StoreContextMut<ComponentStoreData>, _params, results| {
@@ -90,10 +92,7 @@ fn add_config_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<()
                     let pairs: Vec<Val> = config_map
                         .iter()
                         .map(|(k, v)| {
-                            Val::Tuple(vec![
-                                Val::String(k.clone().into()),
-                                Val::String(v.clone().into()),
-                            ])
+                            Val::Tuple(vec![Val::String(k.clone()), Val::String(v.clone())])
                         })
                         .collect();
                     results[0] = Val::List(pairs);
@@ -116,7 +115,8 @@ fn add_keyvalue_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<
     // kv-exists(key: string) -> bool
 
     // Implement kv-get(key: string) -> option<list<u8>>
-    linker.root()
+    linker
+        .root()
         .func_new(
             "kv-get",
             move |mut store: wasmtime::StoreContextMut<ComponentStoreData>, params, results| {
@@ -126,7 +126,7 @@ fn add_keyvalue_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<
                         let value = kv_map.get(key.as_str()).cloned();
                         if let Some(v) = value {
                             results[0] = Val::Option(Some(Box::new(Val::List(
-                                v.into_iter().map(|b| Val::U8(b)).collect()
+                                v.into_iter().map(Val::U8).collect(),
                             ))));
                         } else {
                             results[0] = Val::Option(None);
@@ -143,18 +143,16 @@ fn add_keyvalue_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<
         .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
 
     // Implement kv-set(key: string, value: list<u8>) -> unit
-    linker.root()
+    linker
+        .root()
         .func_new(
             "kv-set",
             move |mut store: wasmtime::StoreContextMut<ComponentStoreData>, params, _results| {
                 if let (Val::String(key), Val::List(value_list)) = (&params[0], &params[1]) {
-                    let bytes: Vec<u8> = value_list.iter().filter_map(|v| {
-                        if let Val::U8(b) = v {
-                            Some(*b)
-                        } else {
-                            None
-                        }
-                    }).collect();
+                    let bytes: Vec<u8> = value_list
+                        .iter()
+                        .filter_map(|v| if let Val::U8(b) = v { Some(*b) } else { None })
+                        .collect();
 
                     if let Some(kv_map) = store.data_mut().keyvalue.as_mut() {
                         kv_map.insert(key.to_string(), bytes);
@@ -168,7 +166,8 @@ fn add_keyvalue_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<
         .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
 
     // Implement kv-delete(key: string) -> unit
-    linker.root()
+    linker
+        .root()
         .func_new(
             "kv-delete",
             move |mut store: wasmtime::StoreContextMut<ComponentStoreData>, params, _results| {
@@ -185,12 +184,16 @@ fn add_keyvalue_to_linker(linker: &mut Linker<ComponentStoreData>) -> NifResult<
         .map_err(|e| rustler::Error::Term(Box::new(e.to_string())))?;
 
     // Implement kv-exists(key: string) -> bool
-    linker.root()
+    linker
+        .root()
         .func_new(
             "kv-exists",
             move |store: wasmtime::StoreContextMut<ComponentStoreData>, params, results| {
                 if let Val::String(key) = &params[0] {
-                    let exists = store.data().keyvalue.as_ref()
+                    let exists = store
+                        .data()
+                        .keyvalue
+                        .as_ref()
                         .map(|kv_map| kv_map.contains_key(key.as_str()))
                         .unwrap_or(false);
                     results[0] = Val::Bool(exists);

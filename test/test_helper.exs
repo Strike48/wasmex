@@ -21,16 +21,13 @@ defmodule TestHelper do
       "#{@component_exported_interface_source_dir}/target/wasm32-wasip1/debug/exported_interface.wasm"
 
   def wasi_sockets_test_file_path,
-    do:
-      "#{@wasi_sockets_test_source_dir}/target/wasm32-wasip1/release/wasi_sockets_test.wasm"
+    do: "#{@wasi_sockets_test_source_dir}/target/wasm32-wasip1/release/wasi_sockets_test.wasm"
 
   def wasi_config_test_file_path,
-    do:
-      "#{@wasi_config_test_source_dir}/target/wasm32-wasip1/release/wasi_config_test.wasm"
+    do: "#{@wasi_config_test_source_dir}/target/wasm32-wasip1/release/wasi_config_test.wasm"
 
   def wasi_keyvalue_test_file_path,
-    do:
-      "#{@wasi_keyvalue_test_source_dir}/target/wasm32-wasip1/release/wasi_keyvalue_test.wasm"
+    do: "#{@wasi_keyvalue_test_source_dir}/target/wasm32-wasip1/release/wasi_keyvalue_test.wasm"
 
   def wasm_test_file_path,
     do: "#{@wasm_test_source_dir}/target/wasm32-unknown-unknown/debug/wasmex_test.wasm"

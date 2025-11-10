@@ -195,7 +195,7 @@ defmodule Wasmex do
       iex> {:ok, stdin} = Wasmex.Pipe.new()
       iex> {:ok, stdout} = Wasmex.Pipe.new()
       iex> wasi_options = %Wasmex.Wasi.WasiOptions{
-      ...>   args: ["wasmex", "echo"],
+      ...>   args: ["echo"],
       ...>   stdin: stdin,
       ...>   stdout: stdout
       ...> }

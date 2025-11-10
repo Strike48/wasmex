@@ -38,7 +38,7 @@ defmodule Wasmex.WasiArgvTest do
       )
       """
 
-      {:ok, wasm_bytes} = Wasmex.Wat.wat2wasm(wat)
+      {:ok, wasm_bytes} = Wasmex.Wat.to_wasm(wat)
 
       # Test with no args - should get argc=1 (just program name)
       wasi_opts = %Wasmex.Wasi.WasiOptions{
@@ -78,7 +78,7 @@ defmodule Wasmex.WasiArgvTest do
       )
       """
 
-      {:ok, wasm_bytes} = Wasmex.Wat.wat2wasm(wat)
+      {:ok, wasm_bytes} = Wasmex.Wat.to_wasm(wat)
 
       wasi_opts = %Wasmex.Wasi.WasiOptions{
         args: ["arg1", "arg2", "arg3"]
