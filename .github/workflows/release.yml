@@ -166,3 +166,22 @@ jobs:
           git add checksum-Elixir.Wasmex.Native.exs
           git diff --staged --quiet || git commit -m "Add checksums for artifacts from ${ORIGINAL_SHA} [skip ci]"
           git push
+
+      - name: Delete old release and recreate with new commit
+        run: |
+          # Delete the old release tag (points to commit without checksums)
+          gh release delete "${ORIGINAL_SHA}" --yes --repo "${{ github.repository }}" || true
+          git push origin :refs/tags/"${ORIGINAL_SHA}" || true
+
+          # Get the new commit SHA (has the checksums)
+          NEW_SHA=$(git rev-parse --short HEAD)
+
+          # Create a new release with the new commit SHA containing the checksums
+          gh release create "${NEW_SHA}" \
+            --title "Commit build: ${NEW_SHA}" \
+            --notes "Automated precompiled build from commit ${NEW_SHA} (includes checksums)." \
+            --prerelease \
+            --repo "${{ github.repository }}" \
+            artifacts/*/*.tar.gz
+        env:
+          GH_TOKEN: ${{ github.token }}
